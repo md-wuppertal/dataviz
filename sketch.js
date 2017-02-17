@@ -5,26 +5,22 @@ var myScale = 40;
 var scaleSlider;
 var mapData;
 
-var xShift = 37000;
-var yShift = 568000;
+var map_x_offset;
+var map_y_offset;
 
-function preload() {
-  console.log('id be first')
-}
-  shapefile.open("data/Stadtgebiet_EPSG25832_SHAPE.shp")
-    .then(function(source) {
-      console.log(source);
-      source.read().then(function next(result) {
-        if(result.done) return; //end if file was run through
-        console.log(result.value.geometry.coordinates);
-        mapData = result.value.geometry.coordinates;
-        return source.read().then(next);
-      });
-    })
-    .catch(error => console.error(error.stack));
+shapefile.open("data/Stadtgebiet_EPSG25832_SHAPE.shp")
+  .then(function(source) {
+    console.log(source);
+    source.read().then(function next(result) {
+      if(result.done) return; //end if file was run through
+      mapData = result.value.geometry.coordinates;
+      return source.read().then(next);
+    });
+  })
+  .catch(error => console.error(error.stack));
 
 function setup() {
-  // noLoop();
+  frameRate(30)
   shiftSlider = select('#shiftSlider');
   scaleSlider = select('#scaleSlider');
   createCanvas(displayWidth, displayHeight);
@@ -36,10 +32,12 @@ function draw() {
   background(255, 204, 0);
   fill(255);
   stroke(255);
+  map_x_offset = mapData[0][0][0];
+  map_y_offset = mapData[0][0][1];
   mapData[0].forEach(function(element) {
-    xPos = element[0]/myScale - (xShift + shift)
-    yPos = element[1]/myScale - (yShift + shift)
-    ellipse(xPos, yPos, 1, 1);
+    xPos = (element[0] - map_x_offset)/myScale + displayWidth/2 + shift
+    yPos = (element[1] - map_y_offset)/myScale + displayHeight/2 + shift
+    ellipse(xPos, yPos, 5, 5);
   }, this);
   shift = shiftSlider.value();
   myScale = scaleSlider.value();
