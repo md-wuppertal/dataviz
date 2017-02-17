@@ -4,6 +4,7 @@ var shift = 0;
 var myScale = 40;
 var scaleSlider;
 var mapData;
+var ecoData = [];
 
 var map_x_offset;
 var map_y_offset;
@@ -23,6 +24,17 @@ shapefile.open("data/Stadtgebiet_EPSG25832_SHAPE.shp")
     });
   })
   .catch(error => console.error(error.stack));
+  shapefile.open("data/Umweltzonen_EPSG25832_SHAPE.shp")
+  .then(function(source) {
+    console.log(source);
+    source.read().then(function next(result) {
+      if(result.done) return; //end if file was run through
+      ecoData.push(result.value.geometry.coordinates);
+      return source.read().then(next);
+    });
+  })
+  .catch(error => console.error(error.stack));
+
 
 function setup() {
   createCanvas(displayWidth, displayHeight, WEBGL); //
@@ -38,9 +50,9 @@ function setup() {
 function draw() {
   background(255, 204, 0);
  
-  pg.beginShape();
   pg.background(255, 204, 0);
   pg.push();
+  pg.beginShape();
   pg.fill(255);
   pg.stroke(255);
   map_x_offset = mapData[0][0][0];
@@ -52,6 +64,9 @@ function draw() {
   }, this);
   pg.endShape();
   pg.pop();
+  drawEcoZone();
+
+
   pg.fill(0);
   pg.noStroke();
   pg.text(shift, 1000, 300);
@@ -83,10 +98,37 @@ function mousePressed() {
 function mouseDragged() {
   deltaY = mouseY - oY;
   deltaX = mouseX - oX;
-  console.log(mX + deltaX);
+  // console.log(mX + deltaX);
 }
 function mouseReleased() {
   mX += deltaX;
   mY += deltaY;
   deltaX = deltaY = 0;
+}
+
+function drawEcoZone() {
+  pg.push();
+  pg.beginShape();
+  pg.fill(255,20,0);
+  pg.stroke(255);
+  map_x_offset = ecoData[0][0][0][0];
+  map_y_offset = ecoData[0][0][0][1];
+  ecoData[0][0].forEach(function(element) {
+    xPos = (element[0] - map_x_offset)/myScale + shift + width/1.4 + random(10)
+    yPos = (element[1] - map_y_offset)/myScale + shift + height/1.1 + random(10)
+    pg.vertex(xPos, yPos);
+  }, this);
+  pg.endShape();
+  pg.beginShape();
+  pg.fill(255,20,0);
+  pg.stroke(255);
+  // map_x_offset = ecoData[0][0][0][0];
+  // map_y_offset = ecoData[0][0][0][1];
+  ecoData[1][0].forEach(function(element) {
+    xPos = (element[0] - map_x_offset)/myScale + shift + width/1.4
+    yPos = (element[1] - map_y_offset)/myScale + shift + height/1.1
+    pg.vertex(xPos, yPos);
+  }, this);
+  pg.endShape();
+  pg.pop();
 }
