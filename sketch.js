@@ -7,6 +7,11 @@ var mapData;
 
 var map_x_offset;
 var map_y_offset;
+var pg;
+
+var rotZ = rotX = 0;
+var mX = mY = oX = oY = deltaX = deltaY = 0;
+
 
 shapefile.open("data/Stadtgebiet_EPSG25832_SHAPE.shp")
   .then(function(source) {
@@ -20,27 +25,68 @@ shapefile.open("data/Stadtgebiet_EPSG25832_SHAPE.shp")
   .catch(error => console.error(error.stack));
 
 function setup() {
-  frameRate(30)
-  shiftSlider = select('#shiftSlider');
+  createCanvas(displayWidth, displayHeight, WEBGL); //
+  pg = createGraphics(displayWidth, displayHeight); // create separate graphics object
+
+  frameRate(30) //slow a little to save graphicscard
+  background(255, 204, 0); //nice yellow background
+  fill(255); 
   scaleSlider = select('#scaleSlider');
-  createCanvas(displayWidth, displayHeight);
-  background(255, 204, 0);
-  fill(255);
+  shiftSlider = select('#shiftSlider');
 }
 
 function draw() {
   background(255, 204, 0);
-  fill(255);
-  stroke(255);
+ 
+  pg.beginShape();
+  pg.background(255, 204, 0);
+  pg.push();
+  pg.fill(255);
+  pg.stroke(255);
   map_x_offset = mapData[0][0][0];
   map_y_offset = mapData[0][0][1];
   mapData[0].forEach(function(element) {
-    xPos = (element[0] - map_x_offset)/myScale + displayWidth/2 + shift
-    yPos = (element[1] - map_y_offset)/myScale + displayHeight/2 + shift
-    ellipse(xPos, yPos, 5, 5);
+    xPos = (element[0] - map_x_offset)/myScale + shift + width/1.4
+    yPos = (element[1] - map_y_offset)/myScale + shift + height/1.1
+    pg.vertex(xPos, yPos);
   }, this);
+  pg.endShape();
+  pg.pop();
+  pg.fill(0);
+  pg.noStroke();
+  pg.text(shift, 1000, 300);
+  pg.text(myScale, 1000, 400);
+  
+  // push();
   shift = shiftSlider.value();
   myScale = scaleSlider.value();
-  text(shift, 1000, 300);
-  text(myScale, 1000, 400);
+  // fill(255);
+  // stroke(255);
+  // box(30);
+  // rotate(PI/-3, [1,0,0]);
+
+  rotateX(radians(mY + deltaY));
+  rotateZ(radians(mX + deltaX))
+  translate(0,-200,30);
+  texture(pg);
+  plane(displayWidth, displayHeight); //thats the map canvas
+  // box(30);
+}
+
+
+//braainfuck :P
+function mousePressed() {
+  oX = mouseX;
+  oY = mouseY;
+}
+
+function mouseDragged() {
+  deltaY = mouseY - oY;
+  deltaX = mouseX - oX;
+  console.log(mX + deltaX);
+}
+function mouseReleased() {
+  mX += deltaX;
+  mY += deltaY;
+  deltaX = deltaY = 0;
 }
